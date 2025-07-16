@@ -1,0 +1,19 @@
+# Python specific ignores
+__pycache__/
+*.pyc
+.env
+v_scarletai
+*.log
+
+# OS and editor specific ignores 
+.DS_Store
+Thumbs.db
+.idea/             
+.vscode/           
+.idea/    
+.vscode/  
+
+# More backend ignores
+data/
+tmp
+build/
