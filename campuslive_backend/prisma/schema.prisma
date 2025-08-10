@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts           Post[]
+  organizedEvents Event[]
+  attendances     EventAttendance[]
+
+  @@map("users")
+}
+
+model Location {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  latitude    Float
+  longitude   Float
+  category    String
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts  Post[]
+  events Event[]
+
+  @@map("locations")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  content     String?
+  mediaUrl    String?
+  mediaType   MediaType?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  locationId  String
+  eventId     String?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  event       Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@map("posts")
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  isLive      Boolean     @default(false)
+  status      EventStatus @default(UPCOMING)
+  maxAttendees Int?       // Optional capacity limit
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  organizerId String
+  locationId  String
+
+  organizer   User     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  posts       Post[]
+  attendances EventAttendance[]
+
+  @@map("events")
+}
+
+model EventAttendance {
+  id        String   @id @default(cuid())
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+  isActive  Boolean  @default(true)
+  
+  userId    String
+  eventId   String
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, eventId])
+  @@map("event_attendances")
+}
+
+enum UserRole {
+  STUDENT
+  FACULTY
+  ADMIN
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum EventStatus {
+  UPCOMING
+  LIVE
+  ENDED
+  CANCELLED
+}
